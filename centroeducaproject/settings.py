@@ -179,10 +179,10 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:4200/'
     # Agrega otros dominios si es necesario
 ]
+"""
+CORS_ALLOW_ALL_ORIGINS = True
 
-#CORS_ALLOW_ALL_ORIGINS = True
-
-
+"""
 CORS_ALLOWED_ORIGINS = [
 "https://victorious-cliff-0d436500f.5.azurestaticapps.net",
    'https://centro-educa-back.azurewebsites.net'
