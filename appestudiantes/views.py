@@ -1,11 +1,12 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.db import connection
 from django.http import JsonResponse
 from django.utils import timezone
+from rest_framework.permissions import AllowAny # type: ignore
+
 
 
 # Vista para el serivicio estudiantes. 
@@ -142,6 +143,7 @@ def resumeNotas(request):
         WHERE 
             ca.idCurso_int = %s
             AND n.rutEstudiante_str = %s
+            AND n.valor_flo IS NOT NULL
         ORDER BY 
             n.idAsignatura_int, n.nombre_str;
     """
@@ -175,18 +177,19 @@ def proximosFeed(request):
         return JsonResponse({"error": "rutEstudiante_str no proporcionado"}, status=400)
 
     query = """
-        SELECT *
+        SELECT TOP 6 *
         FROM (
             SELECT 
-                e.descripcion as Descripcion,
-                e.fechaEvento_dat as Fecha,
-                e.lugarEvento_str as Lugar,
-                a.nombre_str as Nombre_Asignatura,
-                te.nombre_str as Categoria_Evento
+                e.descripcion AS Descripcion,
+                e.fechaEvento_dat AS Fecha,
+                e.lugarEvento_str AS Lugar,
+                a.nombre_str AS Nombre_Asignatura,
+                te.nombre_str AS Categoria_Evento
             FROM evento e
+            LEFT JOIN eventoEstudiante ee ON e.idEvento_int = ee.idEvento_int
             LEFT JOIN asignatura a ON e.idAsignatura_int = a.idAsignatura_int
-            LEFT JOIN tipoevento te ON e.idTipoEvento_int = te.idTipoEvento_int
-            WHERE e.rutEstudiante_str = %s
+            LEFT JOIN tipoEvento te ON e.idTipoEvento_int = te.idTipoEvento_int
+            WHERE ee.rutEstudiante_str = %s
             AND e.fechaEvento_dat > GETDATE()
 
             UNION ALL
@@ -410,7 +413,7 @@ def detallePromedioNotaAsistencia(request):
             n.idAsignatura_int AS Id_Asignatura, 
             a.nombre_str as Nombre_Asignatura,
             ROUND(SUM(n.valor_flo * n.ponderacion_int) / SUM(n.ponderacion_int),1) AS Registro,
-            'Promedio Notas' as Tipo
+            'Promedio' as Tipo
         FROM 
             nota n
         LEFT JOIN 
@@ -431,7 +434,7 @@ def detallePromedioNotaAsistencia(request):
             asis.idAsignatura_int AS Id_Asignatura, 
             a.nombre_str as Nombre_Asignatura,
             CAST(ROUND(SUM(CASE WHEN asis.idTipoEstado_int = 5 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) AS DECIMAL(5,1)) AS Registro,
-            'Promedio Asistencia' as Tipo
+            'Asistencia' as Tipo
         FROM 
             asistencia asis
         LEFT JOIN 
@@ -536,7 +539,7 @@ def detalleRegistrosNotasAsignaturas(request):
     query = """
     SELECT 
         n.idAsignatura_int AS Asignatura, 
-        a.nombre_str as Nombree_Asignatura,
+        a.nombre_str as Nombre_Asignatura,
         n.nombre_str AS Tipo, 
         n.ponderacion_int as Ponderacion, 
         n.valor_flo AS Registro, 
@@ -562,7 +565,7 @@ def detalleRegistrosNotasAsignaturas(request):
 
     SELECT 
         asis.idAsignatura_int AS Asignatura, 
-        a.nombre_str as Nombree_Asignatura,
+        a.nombre_str as Nombre_Asignatura,
         'Asistencia' AS Tipo, 
         null as Ponderacion, 
         asis.idTipoEstado_int AS Registro, 
@@ -603,3 +606,146 @@ def detalleRegistrosNotasAsignaturas(request):
         return JsonResponse(results, safe=False)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@api_view(['POST'])
+def detalleNotas(request):
+    
+    rut_estudiante = request.data.get('rutEstudiante_str')
+    id_curso = request.data.get('idCurso_int')
+    id_Asignatura = request.data.get('idAsignatura_int')
+
+
+    if not rut_estudiante or not id_curso or not id_Asignatura:
+        return JsonResponse({"error": "Parámetros no proporcionados"}, status=400)
+
+    query = """
+        SELECT 
+            a.nombre_str as Nombre_Asignatura,
+            n.rutEstudiante_str AS Rut_Estudiante, 
+            n.idAsignatura_int AS Asignatura, 
+            n.nombre_str AS Evaluacion, 
+            n.valor_flo AS Nota, 
+            ca.idCurso_int AS Id_Curso, 
+            n.fechaRegistro_dat,
+            ROUND((SELECT AVG(n2.valor_flo) 
+             FROM nota n2
+             LEFT JOIN cursoAsignatura ca2 ON n2.idAsignatura_int = ca2.idAsignatura_int
+             WHERE ca2.idCurso_int = ca.idCurso_int
+             AND n2.idAsignatura_int = n.idAsignatura_int
+             AND n2.nombre_str = n.nombre_str),1) AS Promedio_Evaluacion
+        FROM 
+            nota n
+        LEFT JOIN 
+            cursoAsignatura ca ON n.idAsignatura_int = ca.idAsignatura_int
+        LEFT JOIN 
+            asignatura a ON ca.idAsignatura_int = a.idAsignatura_int
+        WHERE 
+            ca.idCurso_int = %s
+            AND n.rutEstudiante_str = %s
+            AND n.idAsignatura_int = %s
+            AND n.valor_flo IS NOT NULL
+        ORDER BY 
+            n.idAsignatura_int, n.nombre_str;
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, [id_curso, rut_estudiante, id_Asignatura])
+        rows = cursor.fetchall()
+
+    results = []
+    for row in rows:
+        results.append({
+            'Nombre_Asignatura': row[0],
+            'Rut_Estudiante': row[1],
+            'Asignatura': row[2],
+            'Evaluacion': row[3],
+            'Nota': row[4],
+            'Id_Curso': row[5],
+            'fechaRegistro_dat': row[6],
+            'Promedio_Evaluacion': row[7],
+        })
+
+    return JsonResponse(results, safe=False)
+
+
+#Module Eventos
+@api_view(['POST'])
+def detalleEventos(request):
+    rut_estudiante = request.data.get('rutEstudiante_str')
+
+    if not rut_estudiante:
+        return JsonResponse({"error": "Parámetros no proporcionados"}, status=400)
+
+    query = """
+        SELECT 
+            a.nombre_str AS Nombre_Asignatura,
+            te.nombre_str AS Tipo,
+            e.lugarEvento_str AS Lugar,
+            e.fechaEvento_dat AS Fecha,
+            e.descripcion AS Descripcion,
+            (SELECT COUNT(*) FROM eventoEstudiante ee WHERE ee.idEvento_int = e.idEvento_int) AS Cantidad
+        FROM evento e
+        LEFT JOIN asignatura a ON e.idAsignatura_int = a.idAsignatura_int
+        LEFT JOIN tipoEvento te ON e.idTipoEvento_int = te.idTipoEvento_int
+        LEFT JOIN eventoEstudiante ee ON e.idEvento_int = ee.idEvento_int
+        WHERE ee.rutEstudiante_str = %s
+        AND a.idTipoEstado_int = 1
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, [rut_estudiante])
+        rows = cursor.fetchall()
+
+    results = []
+    for row in rows:
+        results.append({
+            'Nombre_Asignatura': row[0],
+            'Tipo': row[1],
+            'Lugar': row[2],
+            'Fecha': row[3],
+            'Descripcion': row[4],
+            'Cantidad': row[5],
+        })
+
+    return JsonResponse(results, safe=False)
+
+#Module Observaciones
+@api_view(['POST'])
+def detalleObservaciones(request):
+    rut_estudiante = request.data.get('rutEstudiante_str')
+
+    if not rut_estudiante:
+        return JsonResponse({"error": "Parámetros no proporcionados"}, status=400)
+
+    query = """
+        SELECT 
+            o.descripcion AS Descripcion_Observacion,
+            o.fechaRegistro_dat AS Fecha_Registro,
+            a.nombre_str AS Nombre_Asignatura,
+            too.nombre_str AS Tipo_Observacion,
+            CONCAT(p.nombres_str, ' ', p.apellidos_str) AS Nombre_Profesor
+        FROM observacion o
+        LEFT JOIN asignatura a ON o.idAsignatura_int = a.idAsignatura_int
+        LEFT JOIN tipoObservacion too ON o.idTipoObservacion_int = too.idTipoObservacion_int
+        LEFT JOIN profesor p ON o.usuarioModificacion_str = p.rut_str
+        WHERE o.rutEstudiante_str = %s
+        AND a.idTipoEstado_int = 1
+        
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, [rut_estudiante])
+        rows = cursor.fetchall()
+
+    results = []
+    for row in rows:
+        results.append({
+            'Descripcion_Observacion': row[0],
+            'Fecha_Registro': row[1],
+            'Nombre_Asignatura': row[2],
+            'Tipo_Observacion': row[3],
+            'Nombre_Profesor': row[4],
+        })
+
+    return JsonResponse(results, safe=False)

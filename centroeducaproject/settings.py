@@ -95,7 +95,7 @@ WSGI_APPLICATION = 'centroeducaproject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'sistemaEducacional',
+        'NAME': 'centro-educa',
         'USER': 'djangoAdmin',
         'PASSWORD': 'djangoAdmin11',
         'HOST': 'SLOTHOMAS\SLOTHOMAS', # type: ignore
@@ -106,6 +106,7 @@ DATABASES = {
         }
     }
 }
+
 """
 
 DATABASES = {
@@ -185,10 +186,11 @@ CORS_ALLOW_ALL_ORIGINS = True
 """
 CORS_ALLOWED_ORIGINS = [
 "https://victorious-cliff-0d436500f.5.azurestaticapps.net",
-   'https://centro-educa-back.azurewebsites.net'
-   
+'https://centro-educa-back.azurewebsites.net'
+
     #Agrega aquí más dominios si es necesario
 ]
+
 
 
 

@@ -21,6 +21,7 @@ class Profesor(models.Model):
     idnacionalidad_int = models.ForeignKey(Pais, models.DO_NOTHING, db_column='idNacionalidad_int', blank=True, null=True)  # Field name made lowercase.
     idprofesion_int = models.ForeignKey(Tipoprofesion, models.DO_NOTHING, db_column='idProfesion_int', blank=True, null=True)  # Field name made lowercase.
     descripcion_str = models.CharField(max_length=150, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)
+    telcontacto_str = models.CharField(db_column='telContacto_str', max_length=20, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)  # Field name made lowercase.
 
 
     class Meta:

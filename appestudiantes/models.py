@@ -21,8 +21,10 @@ class Estudiante(models.Model):
     idregion_int = models.ForeignKey(Region, models.DO_NOTHING, db_column='idRegion_int', blank=True, null=True)  # Field name made lowercase.
     idcomuna_int = models.ForeignKey(Comuna, models.DO_NOTHING, db_column='idComuna_int', blank=True, null=True)  # Field name made lowercase.
     idnacionalidad_int = models.ForeignKey(Pais, models.DO_NOTHING, db_column='idNacionalidad_int', blank=True, null=True)  # Field name made lowercase.
+    telcontacto_str = models.CharField(db_column='telContacto_str', max_length=20, db_collation='Modern_Spanish_CI_AS', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
         db_table = 'estudiante'
+        managed = False
+
 
