@@ -15,5 +15,6 @@ urlpatterns = [
     path('detalleNotas', views.detalleNotas, name ='detalleNotas'),
     path('detalleEventos', views.detalleEventos, name='detalleEventos'),
     path('detalleObservaciones', views.detalleObservaciones, name='detalleObservaciones'),
+    path('inscripcionEvento', views.inscripcionEvento, name='inscripcionEvento'),
     
 ]

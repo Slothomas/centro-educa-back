@@ -177,7 +177,7 @@ def proximosFeed(request):
         return JsonResponse({"error": "rutEstudiante_str no proporcionado"}, status=400)
 
     query = """
-        SELECT TOP 6 *
+        SELECT TOP 5 *
         FROM (
             SELECT 
                 e.descripcion AS Descripcion,
@@ -433,7 +433,7 @@ def detallePromedioNotaAsistencia(request):
         SELECT 
             asis.idAsignatura_int AS Id_Asignatura, 
             a.nombre_str as Nombre_Asignatura,
-            CAST(ROUND(SUM(CASE WHEN asis.idTipoEstado_int = 5 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) AS DECIMAL(5,1)) AS Registro,
+            CAST(ROUND(SUM(CASE WHEN asis.idTipoEstado_int = 5 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 0) AS DECIMAL(5,1)) AS Registro,
             'Asistencia' as Tipo
         FROM 
             asistencia asis
@@ -669,47 +669,112 @@ def detalleNotas(request):
     return JsonResponse(results, safe=False)
 
 
-#Module Eventos
+# Módulo Eventos
 @api_view(['POST'])
 def detalleEventos(request):
+    
     rut_estudiante = request.data.get('rutEstudiante_str')
 
     if not rut_estudiante:
         return JsonResponse({"error": "Parámetros no proporcionados"}, status=400)
 
     query = """
-        SELECT 
-            a.nombre_str AS Nombre_Asignatura,
-            te.nombre_str AS Tipo,
-            e.lugarEvento_str AS Lugar,
-            e.fechaEvento_dat AS Fecha,
-            e.descripcion AS Descripcion,
-            (SELECT COUNT(*) FROM eventoEstudiante ee WHERE ee.idEvento_int = e.idEvento_int) AS Cantidad
-        FROM evento e
-        LEFT JOIN asignatura a ON e.idAsignatura_int = a.idAsignatura_int
-        LEFT JOIN tipoEvento te ON e.idTipoEvento_int = te.idTipoEvento_int
-        LEFT JOIN eventoEstudiante ee ON e.idEvento_int = ee.idEvento_int
-        WHERE ee.rutEstudiante_str = %s
-        AND a.idTipoEstado_int = 1
+        ;WITH Event_Count AS (
+            SELECT 
+                ee2.idEvento_int,
+                COUNT(*) AS Cantidad_Estudiantes
+            FROM eventoEstudiante ee2
+            GROUP BY ee2.idEvento_int
+        ),
+        Student_Events AS (
+            SELECT 
+                e.idEvento_int AS Id_Evento,
+                a.nombre_str AS Nombre_Asignatura,
+                te.nombre_str AS Tipo,
+                e.lugarEvento_str AS Lugar,
+                e.fechaEvento_dat AS Fecha,
+                e.descripcion AS Descripcion,
+                COALESCE(ec.Cantidad_Estudiantes, 0) AS Cantidad_Estudiantes,
+                1 AS Mi_Evento
+            FROM evento e
+            LEFT JOIN eventoEstudiante ee ON e.idEvento_int = ee.idEvento_int
+            LEFT JOIN asignatura a ON e.idAsignatura_int = a.idAsignatura_int
+            LEFT JOIN tipoEvento te ON e.idTipoEvento_int = te.idTipoEvento_int
+            LEFT JOIN Event_Count ec ON e.idEvento_int = ec.idEvento_int
+            WHERE ee.rutEstudiante_str = %s
+            AND a.idTipoEstado_int = 1
+        ),
+        Upcoming_Events AS (
+            SELECT 
+                e.idEvento_int AS Id_Evento,
+                a.nombre_str AS Nombre_Asignatura,
+                te.nombre_str AS Tipo,
+                e.lugarEvento_str AS Lugar,
+                e.fechaEvento_dat AS Fecha,
+                e.descripcion AS Descripcion,
+                COALESCE(ec.Cantidad_Estudiantes, 0) AS Cantidad_Estudiantes,
+                0 AS Mi_Evento
+            FROM evento e
+            LEFT JOIN asignatura a ON e.idAsignatura_int = a.idAsignatura_int
+            LEFT JOIN tipoEvento te ON e.idTipoEvento_int = te.idTipoEvento_int
+            LEFT JOIN Event_Count ec ON e.idEvento_int = ec.idEvento_int
+            WHERE e.fechaEvento_dat > GETDATE()
+            AND a.idTipoEstado_int = 1
+            AND e.idEvento_int NOT IN (
+                SELECT ee.idEvento_int
+                FROM eventoEstudiante ee
+                WHERE ee.rutEstudiante_str = %s
+            )
+        )
+        SELECT * FROM Student_Events
+        UNION ALL
+        SELECT * FROM Upcoming_Events
+        ORDER BY Fecha;
     """
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, [rut_estudiante])
-        rows = cursor.fetchall()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query, [rut_estudiante, rut_estudiante])
+            rows = cursor.fetchall()
 
-    results = []
-    for row in rows:
-        results.append({
-            'Nombre_Asignatura': row[0],
-            'Tipo': row[1],
-            'Lugar': row[2],
-            'Fecha': row[3],
-            'Descripcion': row[4],
-            'Cantidad': row[5],
-        })
+        results = []
+        for row in rows:
+            results.append({
+                'Id_Evento': row[0],
+                'Nombre_Asignatura': row[1],
+                'Tipo': row[2],
+                'Lugar': row[3],
+                'Fecha': row[4],
+                'Descripcion': row[5],
+                'Cantidad_Estudiantes': row[6],
+                'Mi_Evento': row[7]
+            })
 
-    return JsonResponse(results, safe=False)
+        return JsonResponse(results, safe=False)
 
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+@api_view(['PUT'])
+def inscripcionEvento(request):
+    
+    rut_estudiante = request.data.get('rutEstudiante_str')
+    id_evento = request.data.get('idEvento_int')
+
+    if not rut_estudiante or not id_evento:
+        return JsonResponse({"error": "Parámetros no proporcionados"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO eventoEstudiante (idEvento_int, rutEstudiante_str)
+                VALUES (%s, %s)
+            """, [id_evento, rut_estudiante])
+
+        return JsonResponse({"message": "Inscripción exitosa"}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
 #Module Observaciones
 @api_view(['POST'])
 def detalleObservaciones(request):
