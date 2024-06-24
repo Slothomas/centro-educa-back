@@ -15,21 +15,32 @@ from appprofesores.models import Profesor
 @permission_classes([AllowAny])
 def login(request):
     try:
+        rut_str = request.data.get('rut_str')
+        contrasena_str = request.data.get('contrasena_str')
+        idtiporol_int = request.data.get('idtiporol_int')
+
+        print(f"Login request received - rut_str: {rut_str}, idtiporol_int: {idtiporol_int}")
+
         # Consultar el usuario por rut_str
-        usuario = Usuario.objects.get(rut_str=request.data.get('rut_str'))
+        usuario = Usuario.objects.get(rut_str=rut_str,idtiporol_int=idtiporol_int)
         
-        # Verificar si el usuario y la contraseña son correctos
-        if usuario.contrasena_str == request.data.get('contrasena_str') and usuario.idtiporol_int_id == request.data.get('idtiporol_int'):
-            # Generar tokens de acceso y actualización
-            refresh = RefreshToken.for_user(usuario)
-            refresh['rut'] = usuario.rut_str  # Añadir el RUT al payload del token
-            access_token = str(refresh.access_token)
-            
-            return Response({
-                'mensaje': 'Inicio de sesión exitoso',
-                'access_token': access_token,
-                'refresh_token': str(refresh)
-            }, status=status.HTTP_200_OK)
+        # Verificar si la contraseña es correcta
+        if usuario.contrasena_str == contrasena_str:
+
+            # Verificar si el rol es válido para este usuario
+            if usuario.idtiporol_int.idtiporol_int == idtiporol_int:
+
+                # Generar tokens de acceso y actualización
+                refresh = RefreshToken.for_user(usuario)
+                refresh['rut'] = usuario.rut_str  # Añadir el RUT al payload del token
+                access_token = str(refresh.access_token)
+                return Response({
+                    'mensaje': 'Inicio de sesión exitoso',
+                    'access_token': access_token,
+                    'refresh_token': str(refresh)
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({'mensaje': 'Rol inválido para este usuario'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response({'mensaje': 'Credenciales inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
     
@@ -38,8 +49,8 @@ def login(request):
     
     except Exception as e:
         return Response({'mensaje': f'Error en el servidor: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
+    
+    
 @api_view(['POST'])
 def perfil(request):
     try:
@@ -111,9 +122,10 @@ def actualizarClave(request):
         # Obtener los datos enviados desde Angular
         rut = request.data.get('rut_str')
         nueva_contrasena = request.data.get('contrasena_str')
+        id_rol = request.data.get('idTipoRol_int')  # Asumiendo que envías el idtiporol desde Angular
 
-        # Consultar el usuario por rut
-        usuario = Usuario.objects.get(rut_str=rut)
+        # Consultar el usuario por rut y id de rol
+        usuario = Usuario.objects.get(rut_str=rut, idtiporol_int=id_rol)
         
         # Actualizar la contraseña si el usuario existe
         usuario.contrasena_str = nueva_contrasena
@@ -122,13 +134,12 @@ def actualizarClave(request):
         return Response({'mensaje': 'Clave actualizada correctamente'}, status=status.HTTP_200_OK)
     
     except ObjectDoesNotExist:
-        return Response({'mensaje': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'mensaje': 'Usuario no encontrado para el rol especificado'}, status=status.HTTP_404_NOT_FOUND)
     
     except Exception as e:
         return Response({'mensaje': f'Error en el servidor: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    
 
+    
 @api_view(['PUT'])
 def actualizarDatos(request):
     try:

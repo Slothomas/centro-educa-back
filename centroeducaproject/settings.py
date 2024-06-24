@@ -184,6 +184,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:4200/'
     # Agrega otros dominios si es necesario
 ]
+
 """
 CORS_ALLOW_ALL_ORIGINS = True
 

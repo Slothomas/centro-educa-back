@@ -22,7 +22,9 @@ def datosEstudiante(request):
     try:
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT e.rut_str, e.nombres_str, c.idCurso_int, c.nivelCurso_str, c.letraCurso_str
+                
+                SELECT TOP 1
+                e.rut_str, e.nombres_str, c.idCurso_int, c.nivelCurso_str, c.letraCurso_str
                 FROM estudiante e
                 LEFT JOIN cursoEstudiante ce ON e.rut_str = ce.rutEstudiante_str
                 LEFT JOIN curso c ON ce.idCurso_int = c.idCurso_int
@@ -120,36 +122,41 @@ def resumeNotas(request):
         return JsonResponse({"error": "Parámetros no proporcionados"}, status=400)
 
     query = """
-        SELECT 
-            a.nombre_str as Nombre_Asignatura,
-            n.rutEstudiante_str AS Rut_Estudiante, 
-            n.idAsignatura_int AS Asignatura, 
-            n.nombre_str AS Evaluacion, 
-            n.valor_flo AS Nota, 
-            ca.idCurso_int AS Id_Curso, 
-            n.fechaRegistro_dat,
-            ROUND((SELECT AVG(n2.valor_flo) 
-             FROM nota n2
-             LEFT JOIN cursoAsignatura ca2 ON n2.idAsignatura_int = ca2.idAsignatura_int
-             WHERE ca2.idCurso_int = ca.idCurso_int
-             AND n2.idAsignatura_int = n.idAsignatura_int
-             AND n2.nombre_str = n.nombre_str),1) AS Promedio_Evaluacion
-        FROM 
-            nota n
-        LEFT JOIN 
-            cursoAsignatura ca ON n.idAsignatura_int = ca.idAsignatura_int
-        LEFT JOIN 
-            asignatura a ON ca.idAsignatura_int = a.idAsignatura_int
-        WHERE 
-            ca.idCurso_int = %s
-            AND n.rutEstudiante_str = %s
-            AND n.valor_flo IS NOT NULL
-        ORDER BY 
-            n.idAsignatura_int, n.nombre_str;
+            SELECT 
+                        a.nombre_str as Nombre_Asignatura,
+                        n.rutEstudiante_str AS Rut_Estudiante, 
+                        n.idAsignatura_int AS Asignatura, 
+                        n.nombre_str AS Evaluacion, 
+                        n.valor_flo AS Nota, 
+                        ca.idCurso_int AS Id_Curso, 
+                        n.fechaRegistro_dat,
+                ROUND((SELECT AVG(n2.valor_flo) 
+                    FROM nota n2
+                    LEFT JOIN cursoAsignatura ca2 ON n2.idAsignatura_int = ca2.idAsignatura_int
+                    LEFT JOIN cursoEstudiante ce2 ON n2.rutEstudiante_str = ce2.rutEstudiante_str
+                    WHERE ca2.idCurso_int = ca.idCurso_int
+                        AND n2.idAsignatura_int = n.idAsignatura_int
+                        AND n2.nombre_str = n.nombre_str
+                        AND ce2.idCurso_int = ca.idCurso_int), 1) AS Promedio_Evaluacion
+            FROM 
+                nota n
+            LEFT JOIN 
+                cursoAsignatura ca ON n.idAsignatura_int = ca.idAsignatura_int
+            LEFT JOIN 
+                asignatura a ON ca.idAsignatura_int = a.idAsignatura_int
+            LEFT JOIN 
+                cursoEstudiante ce ON n.rutEstudiante_str = ce.rutEstudiante_str
+            WHERE 
+                ca.idCurso_int = %s -- este es el parámetro que se obtiene de los datos del estudiante del EstudiantesService.
+                AND ce.idCurso_int = %s -- para asegurarnos de que solo se consideren estudiantes del mismo curso
+                AND n.rutEstudiante_str = %s -- este parámetro también se obtiene del EstudiantesService.
+                AND n.valor_flo IS NOT NULL
+            ORDER BY 
+                n.idAsignatura_int;
     """
 
     with connection.cursor() as cursor:
-        cursor.execute(query, [id_curso, rut_estudiante])
+        cursor.execute(query, [id_curso, id_curso,rut_estudiante])
         rows = cursor.fetchall()
 
     results = []
@@ -620,37 +627,42 @@ def detalleNotas(request):
         return JsonResponse({"error": "Parámetros no proporcionados"}, status=400)
 
     query = """
-        SELECT 
-            a.nombre_str as Nombre_Asignatura,
-            n.rutEstudiante_str AS Rut_Estudiante, 
-            n.idAsignatura_int AS Asignatura, 
-            n.nombre_str AS Evaluacion, 
-            n.valor_flo AS Nota, 
-            ca.idCurso_int AS Id_Curso, 
-            n.fechaRegistro_dat,
-            ROUND((SELECT AVG(n2.valor_flo) 
-             FROM nota n2
-             LEFT JOIN cursoAsignatura ca2 ON n2.idAsignatura_int = ca2.idAsignatura_int
-             WHERE ca2.idCurso_int = ca.idCurso_int
-             AND n2.idAsignatura_int = n.idAsignatura_int
-             AND n2.nombre_str = n.nombre_str),1) AS Promedio_Evaluacion
-        FROM 
-            nota n
-        LEFT JOIN 
-            cursoAsignatura ca ON n.idAsignatura_int = ca.idAsignatura_int
-        LEFT JOIN 
-            asignatura a ON ca.idAsignatura_int = a.idAsignatura_int
-        WHERE 
-            ca.idCurso_int = %s
-            AND n.rutEstudiante_str = %s
-            AND n.idAsignatura_int = %s
-            AND n.valor_flo IS NOT NULL
-        ORDER BY 
-            n.idAsignatura_int, n.nombre_str;
+            SELECT 
+                        a.nombre_str as Nombre_Asignatura,
+                        n.rutEstudiante_str AS Rut_Estudiante, 
+                        n.idAsignatura_int AS Asignatura, 
+                        n.nombre_str AS Evaluacion, 
+                        n.valor_flo AS Nota, 
+                        ca.idCurso_int AS Id_Curso, 
+                        n.fechaRegistro_dat,
+                ROUND((SELECT AVG(n2.valor_flo) 
+                    FROM nota n2
+                    LEFT JOIN cursoAsignatura ca2 ON n2.idAsignatura_int = ca2.idAsignatura_int
+                    LEFT JOIN cursoEstudiante ce2 ON n2.rutEstudiante_str = ce2.rutEstudiante_str
+                    WHERE ca2.idCurso_int = ca.idCurso_int
+                        AND n2.idAsignatura_int = n.idAsignatura_int
+                        AND n2.nombre_str = n.nombre_str
+                        AND ce2.idCurso_int = ca.idCurso_int), 1) AS Promedio_Evaluacion
+            FROM 
+                nota n
+            LEFT JOIN 
+                cursoAsignatura ca ON n.idAsignatura_int = ca.idAsignatura_int
+            LEFT JOIN 
+                asignatura a ON ca.idAsignatura_int = a.idAsignatura_int
+            LEFT JOIN 
+                cursoEstudiante ce ON n.rutEstudiante_str = ce.rutEstudiante_str
+            WHERE 
+                ca.idCurso_int = %s -- este es el parámetro que se obtiene de los datos del estudiante del EstudiantesService.
+                AND ce.idCurso_int = %s -- para asegurarnos de que solo se consideren estudiantes del mismo curso
+                AND n.rutEstudiante_str = %s -- este parámetro también se obtiene del EstudiantesService.
+                AND n.valor_flo IS NOT NULL
+                AND n.idAsignatura_int = %s
+            ORDER BY 
+                n.idAsignatura_int;
     """
 
     with connection.cursor() as cursor:
-        cursor.execute(query, [id_curso, rut_estudiante, id_Asignatura])
+        cursor.execute(query, [id_curso, id_curso, rut_estudiante, id_Asignatura])
         rows = cursor.fetchall()
 
     results = []
@@ -718,8 +730,7 @@ def detalleEventos(request):
             LEFT JOIN asignatura a ON e.idAsignatura_int = a.idAsignatura_int
             LEFT JOIN tipoEvento te ON e.idTipoEvento_int = te.idTipoEvento_int
             LEFT JOIN Event_Count ec ON e.idEvento_int = ec.idEvento_int
-            WHERE e.fechaEvento_dat > GETDATE()
-            AND a.idTipoEstado_int = 1
+            WHERE a.idTipoEstado_int = 1
             AND e.idEvento_int NOT IN (
                 SELECT ee.idEvento_int
                 FROM eventoEstudiante ee

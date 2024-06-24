@@ -5,6 +5,7 @@ from rest_framework_simplejwt.tokens import UntypedToken # type: ignore
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError # type: ignore
 from .models import Usuario
 
+
 class CustomAuthentication(BaseAuthentication):
     def authenticate(self, request):
         token = request.headers.get('Authorization')
@@ -30,9 +31,9 @@ class CustomAuthentication(BaseAuthentication):
             if not rut_str:
                 raise AuthenticationFailed('El token no contiene el RUT del usuario')
             
-            try:
-                usuario = Usuario.objects.get(rut_str=rut_str)
-            except Usuario.DoesNotExist:
+            # Buscar el usuario por rut_str
+            usuario = Usuario.objects.filter(rut_str=rut_str).first()
+            if not usuario:
                 raise AuthenticationFailed('Usuario no encontrado')
             
             return (usuario, None)

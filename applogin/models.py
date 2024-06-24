@@ -23,4 +23,3 @@ class Usuario(models.Model):
         db_table = 'usuario'
         
         
-        
