@@ -22,4 +22,5 @@ urlpatterns = [
     path('crearObservacion', views.crearObservacion, name='crearObservacion'),
     path('obtenerLista', views.obtenerLista, name='obtenerLista'),
     path('enviarAsistencia', views.enviarAsistencia, name='enviarAsistencia'),
+    path('crearEvaluacion', views.crearEvaluacion, name='crearEvaluacion'),
 ]

@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -214,5 +215,36 @@ SIMPLE_JWT = {
 }
 
 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
-#
+
+
+# Configuración de correo electrónico para Outlook/Office 365
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.office365.com'
+EMAIL_PORT = 587  # Puerto TLS/STARTTLS para Outlook
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False  # Asegúrate de que EMAIL_USE_SSL esté en False para usar STARTTLS
+
+# Credenciales de correo electrónico
+EMAIL_HOST_USER = 'liceomunicipalcerronavia@outlook.com'
+EMAIL_HOST_PASSWORD = '241094pE$'
+
+# Configuración opcional para seguridad
+DEFAULT_FROM_EMAIL = 'liceomunicipalcerronavia@outlook.com'

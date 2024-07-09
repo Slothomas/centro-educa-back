@@ -735,6 +735,43 @@ def actualizarNota(request):
     
     
 
+@api_view(['POST'])
+def crearEvaluacion(request):
+    # Obtener los datos enviados desde el frontend
+    idAsignatura = request.data.get('idAsignatura')
+    idCurso = request.data.get('idCurso')
+    tipoCalificacion = request.data.get('tipoCalificacion')
+    fechaEvaluacion = request.data.get('fechaEvaluacion')
+    ponderacion = request.data.get('ponderacion')
+    nombre = request.data.get('nombre')
+    usuarioModificacion = request.data.get('usuarioModificacion')
+
+    # Validar datos incompletos
+    if not all([idAsignatura, idCurso, tipoCalificacion, fechaEvaluacion, ponderacion, nombre, usuarioModificacion]):
+        return JsonResponse({"error": "Datos incompletos proporcionados."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Consulta del procedimiento almacenado
+    query = """
+        EXEC [dbo].[spCrearEvaluacion] 
+        @idAsignatura=%s, 
+        @idCurso=%s, 
+        @tipoCalificacion=%s, 
+        @fechaEvaluacion=%s, 
+        @ponderacion=%s, 
+        @nombre=%s, 
+        @usuarioModificacion=%s
+    """
+    
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query, [idAsignatura, idCurso, tipoCalificacion, fechaEvaluacion, ponderacion, nombre, usuarioModificacion])
+        
+        return JsonResponse({"message": "Evaluación creada correctamente."}, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
+    
+
         
 @api_view(['POST'])
 def obtenerLista(request):
@@ -998,7 +1035,6 @@ def obtenerObservaciones(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
                 
-
 
 @api_view(['POST'])
 def crearObservacion(request):
