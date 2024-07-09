@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-t(@ve37ap72frbf=a(cxpu)@d7=+3b25#z5(2if-fb)g28hbgd
 DEBUG = True
 
 
-ALLOWED_HOSTS = ['centro-educa-back.azurewebsites.net','http://localhost:4200/','127.0.0.1','localhost','victorious-cliff-0d436500f.5.azurestaticapps.net'
+ALLOWED_HOSTS = ['centro-educa.azurewebsites.net','http://localhost:4200/','127.0.0.1','localhost','victorious-cliff-0d436500f.5.azurestaticapps.net'
                  ]
 
 
@@ -180,7 +180,7 @@ REST_FRAMEWORK = {
 
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://centro-educa-back.azurewebsites.net',
+    'https://centro-educa.azurewebsites.net',
     'https://victorious-cliff-0d436500f.5.azurestaticapps.net',
     'http://localhost:4200/'
     # Agrega otros dominios si es necesario
@@ -192,7 +192,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 """
 CORS_ALLOWED_ORIGINS = [
 "https://victorious-cliff-0d436500f.5.azurestaticapps.net",
-'https://centro-educa-back.azurewebsites.net'
+'https://centro-educa.azurewebsites.net'
 
     #Agrega aquí más dominios si es necesario
 ]
@@ -233,7 +233,6 @@ TEMPLATES = [
     },
 ]
 
-"""
 
 # Configuración de correo electrónico para Outlook/Office 365
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -248,6 +247,3 @@ EMAIL_HOST_PASSWORD = '241094pE$'
 
 # Configuración opcional para seguridad
 DEFAULT_FROM_EMAIL = 'liceomunicipalcerronavia@outlook.com'
-
-
-"""
