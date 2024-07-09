@@ -233,7 +233,7 @@ TEMPLATES = [
     },
 ]
 
-
+"""
 
 # Configuración de correo electrónico para Outlook/Office 365
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -248,3 +248,6 @@ EMAIL_HOST_PASSWORD = '241094pE$'
 
 # Configuración opcional para seguridad
 DEFAULT_FROM_EMAIL = 'liceomunicipalcerronavia@outlook.com'
+
+
+"""
