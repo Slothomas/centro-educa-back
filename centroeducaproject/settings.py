@@ -93,39 +93,38 @@ WSGI_APPLICATION = 'centroeducaproject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-"""
+
 #Ambiente locale settings
-DATABASES = {
-    'default': {
-        'ENGINE': 'mssql',
-        'NAME': 'centro-educa',
-        'USER': 'djangoAdmin',
-        'PASSWORD': 'djangoAdmin11',
-        'HOST': 'SLOTHOMAS\SLOTHOMAS', # type: ignore
-        'PORT': '',
-        'OPTIONS': {
-            'driver': 'ODBC Driver 18 for SQL Server',
-            'extra_params': 'TrustServerCertificate=yes;Encrypt=yes',
-        }
-    }
-}
-
-"""
-
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
         'NAME': 'centro-educa',
         'USER': 'admincentroeduca',
         'PASSWORD': '241094pE$',
-        'HOST': 'centro-educa-db.database.windows.net',
-        'PORT': '1433',
+        'HOST': 'DESKTOP-BNPOPU4\INSTANCIASQL',
+        'PORT': '20834',
         'OPTIONS': {
             'driver': 'ODBC Driver 18 for SQL Server',
-            'extra_params': 'TrustServerCertificate=yes;Encrypt=yes',
+            'extra_params': 'TrustServerCertificate=yes;Encrypt=yes'
         }
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'mssql',
+#         'NAME': 'centro-educa',
+#         'USER': 'admincentroeduca',
+#         'PASSWORD': '241094pE$',
+#         'HOST': 'centro-educa-db.database.windows.net',
+#         'PORT': '1433',
+#         'OPTIONS': {
+#             'driver': 'ODBC Driver 18 for SQL Server',
+#             'extra_params': 'TrustServerCertificate=yes;Encrypt=yes',
+#         }
+#     }
+#}
 
 
 
@@ -234,16 +233,30 @@ TEMPLATES = [
 ]
 
 
+# # Configuración de correo electrónico para Outlook/Office 365
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.office365.com'
+# EMAIL_PORT = 587  # Puerto TLS/STARTTLS para Outlook
+# EMAIL_USE_TLS = True
+# EMAIL_USE_SSL = False  # Asegúrate de que EMAIL_USE_SSL esté en False para usar STARTTLS
+
+# # Credenciales de correo electrónico
+# EMAIL_HOST_USER = 'liceomunicipalcerronavia@outlook.com'
+# EMAIL_HOST_PASSWORD = '241094pE$'
+
+# # Configuración opcional para seguridad
+# DEFAULT_FROM_EMAIL = 'liceomunicipalcerronavia@outlook.com'
 # Configuración de correo electrónico para Outlook/Office 365
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.office365.com'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587  # Puerto TLS/STARTTLS para Outlook
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False  # Asegúrate de que EMAIL_USE_SSL esté en False para usar STARTTLS
 
 # Credenciales de correo electrónico
-EMAIL_HOST_USER = 'liceomunicipalcerronavia@outlook.com'
-EMAIL_HOST_PASSWORD = '241094pE$'
+EMAIL_HOST_USER = 'centroeducasistema@gmail.com'
+EMAIL_HOST_PASSWORD = 'dpyh ckrf bphx kxnn'
+
 
 # Configuración opcional para seguridad
-DEFAULT_FROM_EMAIL = 'liceomunicipalcerronavia@outlook.com'
+DEFAULT_FROM_EMAIL = 'centroeducasistema@gmail.com'
