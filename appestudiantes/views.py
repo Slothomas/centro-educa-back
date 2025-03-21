@@ -1,4 +1,6 @@
+## appestudiantes/
 from django.shortcuts import get_object_or_404
+from appestudiantes.models import Estudiante
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
@@ -6,6 +8,7 @@ from django.db import connection
 from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework.permissions import AllowAny # type: ignore
+from appcursos.serializers import EstudianteCursoSerializer
 
 
 
@@ -825,3 +828,20 @@ def detalleObservaciones(request):
         })
 
     return JsonResponse(results, safe=False)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def estudiante_con_curso(request):
+    rut_estudiante = request.GET.get('rutEstudiante_str')
+
+    if not rut_estudiante:
+        return Response({"error": "Parámetro rutEstudiante_str no proporcionado"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        estudiante = Estudiante.objects.get(rut_str=rut_estudiante)
+    except Estudiante.DoesNotExist:
+        return Response({"error": "Estudiante no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = EstudianteCursoSerializer(estudiante)
+    return Response(serializer.data, status=status.HTTP_200_OK)

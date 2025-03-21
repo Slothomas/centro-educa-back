@@ -17,4 +17,7 @@ urlpatterns = [
     path('detalleObservaciones', views.detalleObservaciones, name='detalleObservaciones'),
     path('inscripcionEvento', views.inscripcionEvento, name='inscripcionEvento'),
     
+    path('estudiante-curso', views.estudiante_con_curso, name='estudiante_con_curso'),
+
+    
 ]

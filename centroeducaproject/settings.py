@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'appestudiantes',
     'appnotas',
     'appprofesores',
+    'appcursos',
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
