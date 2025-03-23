@@ -1,6 +1,6 @@
 # appcursos/serializers.py
 
-from rest_framework import serializers
+from rest_framework import serializers # type: ignore
 from appcursos.models import Curso, CursoEstudiante
 from appestudiantes.models import Estudiante
 
