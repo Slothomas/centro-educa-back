@@ -46,5 +46,6 @@ urlpatterns = [
    path('login/', include('applogin.urls')),  # URLs for applogin
    path('profesor/', include('appprofesores.urls')),  # URLs for appprofesores
    path('estudiante/', include('appestudiantes.urls')),  # URLs for appestudiantes
+   path('administracion/', include('appadministrador.urls')),  # URLs for appadministrador
    path('comunes/', include('appcomunes.urls')),
 ]

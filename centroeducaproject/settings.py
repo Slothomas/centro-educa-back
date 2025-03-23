@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
     'drf_yasg',
+    'appadministrador',
 ]
 
 MIDDLEWARE = [
@@ -191,10 +192,11 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 """
 CORS_ALLOWED_ORIGINS = [
-"https://victorious-cliff-0d436500f.5.azurestaticapps.net",
-'https://centro-educa.azurewebsites.net'
-
+    "https://victorious-cliff-0d436500f.5.azurestaticapps.net",
+    'https://centro-educa.azurewebsites.net',
     #Agrega aquí más dominios si es necesario
+    "http://localhost:4200"
+    
 ]
 
 
