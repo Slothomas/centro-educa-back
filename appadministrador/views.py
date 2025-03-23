@@ -29,3 +29,26 @@ def listar_usuarios(request):
     usuarios = Usuario.objects.all()  # Consultamos todos los usuarios de la base de datos
     serializer = UsuarioSerializer(usuarios, many=True)  # Serializamos todos los objetos (many=True indica lista)
     return Response(serializer.data, status=status.HTTP_200_OK)  # Retornamos los datos con código 200 (OK)
+
+# Vista para editar un usuario existente
+@api_view(['PUT'])  # Acepta solo solicitudes HTTP PUT
+def editar_usuario(request, id_usuario):
+    try:
+        # Intentamos obtener el usuario desde la base de datos por su ID
+        usuario = Usuario.objects.get(idUsuario_int=id_usuario)
+    except Usuario.DoesNotExist:
+        # Si no se encuentra, devolvemos error 404
+        return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Cargamos los datos recibidos en el serializador
+    # "partial=True" permite que solo se envíen los campos que se desean actualizar
+    serializer = UsuarioSerializer(usuario, data=request.data, partial=True)
+
+    # Verificamos si los datos enviados son válidos
+    if serializer.is_valid():
+        serializer.save()  # Guardamos los cambios en la base de datos
+        return Response(serializer.data, status=status.HTTP_200_OK)  # Devolvemos los datos actualizados
+
+    # Si los datos no son válidos, devolvemos los errores con código 400
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
