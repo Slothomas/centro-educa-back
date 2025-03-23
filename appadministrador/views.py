@@ -23,12 +23,18 @@ def crear_usuario(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # Si hay errores, los devolvemos con código 400
 
 
-# Vista para obtener el listado completo de usuarios
+# Vista para obtener el listado completo de usuarios NO eliminados
 @api_view(['GET'])  # Solo acepta solicitudes HTTP GET
 def listar_usuarios(request):
-    usuarios = Usuario.objects.all()  # Consultamos todos los usuarios de la base de datos
-    serializer = UsuarioSerializer(usuarios, many=True)  # Serializamos todos los objetos (many=True indica lista)
-    return Response(serializer.data, status=status.HTTP_200_OK)  # Retornamos los datos con código 200 (OK)
+    # Filtramos los usuarios que no han sido marcados como eliminados
+    usuarios = Usuario.objects.filter(b_eliminado=False)
+
+    # Serializamos la lista de usuarios válidos
+    serializer = UsuarioSerializer(usuarios, many=True)
+
+    # Retornamos los datos con código 200 (OK)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 # Vista para editar un usuario existente
 @api_view(['PUT'])  # Acepta solo solicitudes HTTP PUT
@@ -52,3 +58,16 @@ def editar_usuario(request, id_usuario):
     # Si los datos no son válidos, devolvemos los errores con código 400
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['DELETE'])
+def eliminar_usuario(request, id_usuario):
+    try:
+        # Buscamos al usuario por su ID
+        usuario = Usuario.objects.get(idUsuario_int=id_usuario)
+    except Usuario.DoesNotExist:
+        return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Marcamos el usuario como eliminado (soft delete)
+    usuario.b_eliminado = True
+    usuario.save()
+
+    return Response({"mensaje": "Usuario eliminado correctamente"}, status=status.HTTP_200_OK)

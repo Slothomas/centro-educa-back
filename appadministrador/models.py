@@ -27,6 +27,7 @@ class Usuario(models.Model):
     contrasena_str = models.CharField(max_length=20, db_column='contrasena_str', blank=True, null=True)
     fechaCreacion_dat = models.DateField(db_column='fechaCreacion_dat', blank=True, null=True)
     fechaUltimoAcceso_dat = models.DateField(db_column='fechaUltimoAcceso_dat', blank=True, null=True)
+    b_eliminado = models.BooleanField(db_column='b_eliminado', default=False)
 
     def __str__(self):
         return f"{self.rut_str} - {self.idTipoRol_int}"
